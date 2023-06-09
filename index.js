@@ -10,33 +10,60 @@ const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
 app.use(cors())
 app.use(express.json())
 
-
-// const verifyJWT = (req, res, next) => {
-//     const authorization = req.headers.authorization;
-//     if (!authorization) {
-//       return res
-//         .status(401)
-//         .send({ error: true, message: "unauthorized access" });
-//     }
-//     // bearer token
-//     const token = authorization.split(" ")[1];
+//========VARIFY JWT==========
+const verifyJWT = (req, res, next) => {
+    const authorization = req.headers.authorization;
+    if (!authorization) {
+      return res
+        .status(401)
+        .send({ error: true, message: "unauthorized access" });
+    }
+    // bearer token
+    const token = authorization.split(" ")[1];
   
-//     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-//       if (err) {
-//         return res
-//           .status(401)
-//           .send({ error: true, message: "unauthorized access" });
-//       }
-//       req.decoded = decoded;
-//       next();
-//     });
-//   };
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) {
+        return res
+          .status(401)
+          .send({ error: true, message: "unauthorized access" });
+      }
+      req.decoded = decoded;
+      next();
+    });
+  };
+
+//===========VARIFY ADMEN=======
+  const verifyAdmin = async (req, res, next) => {
+    const email = req.decoded.email;
+    const query = { email: email };
+    const user = await usersCollection.findOne(query);
+    if (user?.role !== "admin") {
+      return res
+        .status(403)
+        .send({ error: true, message: "forbidden message" });
+    }
+    next();
+  };
+
+  // =======VARIFY INSTRUCTOR=========
+  const verifyInstructor = async (req, res, next) => {
+    const email = req.decoded.email;
+    const query = { email: email };
+    const user = await usersCollection.findOne(query);
+    if (user?.role !== "instructor") {
+      return res
+        .status(403)
+        .send({ error: true, message: "forbidden message" });
+    }
+    next();
+  };
+
 
 app.get('/', (req, res) => {
     res.send('hello world')
 })
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5stkogd.mongodb.net/?retryWrites=true&w=majority`;
 
 console.log(uri);
@@ -56,7 +83,8 @@ async function run() {
     await client.connect();
 
     const usersCollection = client.db("foreignDB").collection("user");
-    const classCollection = client.db("foreignDB").collection("classes");
+    const addClassCollection = client.db("foreignDB").collection("classes");
+    const classesCollection = client.db("foreignDB").collection("allClass");
 
 // =============POST USER API===========
     app.post('/user', async(req, res) => {
@@ -79,19 +107,57 @@ async function run() {
     });
 
 
-    // =====ADD COURSE API========
+    // =====ADD COURSE POST API========
     app.post('/addclass', async(req, res) => {
       const classes = req.body;
-      const result = await classCollection.insertOne(classes)
-      req.send(result)
-    })
-
-
-    app.get('/myclass', async(req, res) => {
-      const result = await classCollection.find().toArray()
+      const result = await addClassCollection.insertOne(classes)
       res.send(result)
     })
 
+// ===========MY CLASSES GET API========
+    app.get('/myclass', async(req, res) => {
+      const body = req.query.status;
+     console.log(body)
+      const result = await addClassCollection.find().toArray()
+      res.send(result)
+    })
+
+// ========MY CLASSES UPDATE STATUS=========
+app.put('/myclass/:id', async(req, res) => {
+  const id = req.params.id;
+  const query = {_id: new ObjectId(id)}
+  const options = { upsert: true };
+  const updateDoc = {
+    $set: {
+      status: "approved"
+    },
+  };
+  const result = await usersCollection.updateOne(query, updateDoc, options);
+  console.log(result)
+  res.send(result)
+})
+
+// ========MY CLASSES GET ONE STATUS=========
+app.get('/myclass/:id', async(req, res) => {
+  const id = req.params.id;
+  const query = {_id: new ObjectId(id)}
+  const result = await addClassCollection.findOne(query)
+  res.send(result)
+})
+
+
+// =======CLASSES POST API=========
+app.post('/classes', async(req, res) => {
+  const classes = req.body;
+      const result = await classesCollection.insertOne(classes)
+      res.send(result)
+})
+
+// ========CLASSES GET API==========
+app.get('/allclass', async(req, res) => {
+      const result = await classesCollection.find().toArray()
+      res.send(result)
+})
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
