@@ -32,31 +32,7 @@ const verifyJWT = (req, res, next) => {
     });
   };
 
-//===========VARIFY ADMEN=======
-  const verifyAdmin = async (req, res, next) => {
-    const email = req.decoded.email;
-    const query = { email: email };
-    const user = await usersCollection.findOne(query);
-    if (user?.role !== "admin") {
-      return res
-        .status(403)
-        .send({ error: true, message: "forbidden message" });
-    }
-    next();
-  };
 
-  // =======VARIFY INSTRUCTOR=========
-  const verifyInstructor = async (req, res, next) => {
-    const email = req.decoded.email;
-    const query = { email: email };
-    const user = await usersCollection.findOne(query);
-    if (user?.role !== "instructor") {
-      return res
-        .status(403)
-        .send({ error: true, message: "forbidden message" });
-    }
-    next();
-  };
 
 
 app.get('/', (req, res) => {
@@ -85,6 +61,42 @@ async function run() {
     const usersCollection = client.db("foreignDB").collection("user");
     const addClassCollection = client.db("foreignDB").collection("classes");
     const classesCollection = client.db("foreignDB").collection("allClass");
+
+    //===========JWT API=========
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
+    });
+
+    //===========VARIFY ADMEN=======
+  const verifyAdmin = async (req, res, next) => {
+    const email = req.decoded.email;
+    const query = { email: email };
+    const user = await usersCollection.findOne(query);
+    if (user?.role !== "admin") {
+      return res
+        .status(403)
+        .send({ error: true, message: "forbidden message" });
+    }
+    next();
+  };
+
+
+  // =======VARIFY INSTRUCTOR=========
+  const verifyInstructor = async (req, res, next) => {
+    const email = req.decoded.email;
+    const query = { email: email };
+    const user = await usersCollection.findOne(query);
+    if (user?.role !== "instructor") {
+      return res
+        .status(403)
+        .send({ error: true, message: "forbidden message" });
+    }
+    next();
+  };
 
 // =============POST USER API===========
     app.post('/user', async(req, res) => {
@@ -121,6 +133,27 @@ async function run() {
       const result = await addClassCollection.find().toArray()
       res.send(result)
     })
+
+    // app.get("/myclass", verifyJWT, async (req, res) => {
+    //   const email = req.query.email;
+
+    //   if (!email) {
+    //     res.send([]);
+    //   }
+
+    //   const decodedEmail = req.decoded.email;
+    //   if (email !== decodedEmail) {
+    //     return res
+    //       .status(403)
+    //       .send({ error: true, message: "porviden access" });
+    //   }
+
+    //   const query = { email: email };
+    //   const result = await addClassCollection.find(query).toArray();
+    //   res.send(result);
+    // });
+
+
 
 // ========MY CLASSES UPDATE STATUS=========
 app.put('/myclass/:id', async(req, res) => {
