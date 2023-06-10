@@ -39,7 +39,10 @@ app.get('/', (req, res) => {
     res.send('hello world')
 })
 
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5stkogd.mongodb.net/?retryWrites=true&w=majority`;
 
 console.log(uri);
@@ -118,6 +121,41 @@ async function run() {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
+
+    // =====MAKE ADMIN API========
+    app.patch('/user/admin/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          role: 'admin'
+        },
+      };
+
+      const result = await usersCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+
+    })
+
+    // ========MAKE INSTRUCTOR API=======
+    app.patch('/users/instructor/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          role: 'instructor'
+        },
+      };
+
+      const result = await usersCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+
+    })
+
 
 
     // =====ADD COURSE POST API========
