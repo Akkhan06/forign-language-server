@@ -174,7 +174,7 @@ async function run() {
       res.send(result)
   })
 
-    app.get("/parsonaldata", verifyJWT, async (req, res) => {
+    app.get("/parsonaldata", verifyJWT, verifyInstructor, async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
