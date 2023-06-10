@@ -159,7 +159,7 @@ async function run() {
 
 
     // =====ADD COURSE POST API========
-    app.post('/addclass', async(req, res) => {
+    app.post('/addclass', verifyJWT, verifyInstructor, async(req, res) => {
       const classes = req.body;
       const result = await classesCollection.insertOne(classes)
       res.send(result)
@@ -167,7 +167,7 @@ async function run() {
 
 
 // ===========MY CLASSES GET API========
-    app.get('/myclass', async(req, res) => {
+    app.get('/myclass', verifyJWT, verifyInstructor, async(req, res) => {
       const body = req.query.status;
      console.log(body)
       const result = await classesCollection.find().toArray()
