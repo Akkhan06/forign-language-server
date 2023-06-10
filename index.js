@@ -62,8 +62,8 @@ async function run() {
     await client.connect();
 
     const usersCollection = client.db("foreignDB").collection("user");
-    const addClassCollection = client.db("foreignDB").collection("classes");
-    const classesCollection = client.db("foreignDB").collection("allClass");
+    const classesCollection = client.db("foreignDB").collection("classes");
+    // const classesCollection = client.db("foreignDB").collection("allClass");
 
     //===========JWT API=========
     app.post("/jwt", (req, res) => {
@@ -161,17 +161,18 @@ async function run() {
     // =====ADD COURSE POST API========
     app.post('/addclass', async(req, res) => {
       const classes = req.body;
-      const result = await addClassCollection.insertOne(classes)
+      const result = await classesCollection.insertOne(classes)
       res.send(result)
     })
+
 
 // ===========MY CLASSES GET API========
     app.get('/myclass', async(req, res) => {
       const body = req.query.status;
      console.log(body)
-      const result = await addClassCollection.find().toArray()
+      const result = await classesCollection.find().toArray()
       res.send(result)
-    })
+  })
 
     app.get("/parsonaldata", verifyJWT, async (req, res) => {
       const email = req.query.email;
@@ -204,7 +205,21 @@ app.put('/myclass/:id', async(req, res) => {
       status: "approved"
     },
   };
-  const result = await usersCollection.updateOne(query, updateDoc, options);
+  const result = await classesCollection.updateOne(query, updateDoc, options);
+  console.log(result)
+  res.send(result)
+})
+
+app.put('/danied/:id', async(req, res) => {
+  const id = req.params.id;
+  const query = {_id: new ObjectId(id)}
+  const options = { upsert: true };
+  const updateDoc = {
+    $set: {
+      status: "denied"
+    },
+  };
+  const result = await classesCollection.updateOne(query, updateDoc, options);
   console.log(result)
   res.send(result)
 })
@@ -213,7 +228,7 @@ app.put('/myclass/:id', async(req, res) => {
 app.get('/myclass/:id', async(req, res) => {
   const id = req.params.id;
   const query = {_id: new ObjectId(id)}
-  const result = await addClassCollection.findOne(query)
+  const result = await classesCollection.findOne(query)
   res.send(result)
 })
 
