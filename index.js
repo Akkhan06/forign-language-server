@@ -63,7 +63,7 @@ async function run() {
 
     const usersCollection = client.db("foreignDB").collection("user");
     const classesCollection = client.db("foreignDB").collection("classes");
-    // const classesCollection = client.db("foreignDB").collection("allClass");
+    const selectedCollection = client.db("foreignDB").collection("selected");
 
     //===========JWT API=========
     app.post("/jwt", (req, res) => {
@@ -87,6 +87,15 @@ async function run() {
     next();
   };
 
+  // =====SELECTED ITEMS POST API======
+  app.post('/select', verifyJWT, async(req, res) => {
+    const selectedItem = req.body;
+    const result = await selectedCollection.insertOne(selectedItem)
+    res.send(result)
+    console.log(result)
+  })
+
+ 
   
 
   // =======VARIFY INSTRUCTOR=========
@@ -111,7 +120,6 @@ async function run() {
       if (existingUser) {
         return res.send({ message: "user already have" });
       }
-
       const result = await usersCollection.insertOne(user);
       res.send(result)
     })
@@ -124,7 +132,7 @@ async function run() {
 
 
     // =======CHECK ANDMIN EMAIL========
-    app.get("/user/admin/:email", verifyJWT, async (req, res) => {
+    app.get("/user/admin/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
 
       if (req.decoded.email !== email) {
@@ -139,7 +147,7 @@ async function run() {
     });
 
     // ======CHECK INSTRUCTOR IMAIL=====
-    app.get("/user/instructor/:email", verifyJWT, async (req, res) => {
+    app.get("/user/instructor/:email", verifyJWT, verifyInstructor, async (req, res) => {
       const email = req.params.email;
 
       if (req.decoded.email !== email) {
@@ -190,7 +198,7 @@ async function run() {
 
 
     // =====ADD COURSE POST API========
-    app.post('/addclass', verifyJWT, verifyInstructor, async(req, res) => {
+    app.post('/addclass', verifyJWT,  async(req, res) => {
       const classes = req.body;
       const result = await classesCollection.insertOne(classes)
       res.send(result)
@@ -198,16 +206,14 @@ async function run() {
 
 
 // ===========MY CLASSES GET API========
-    app.get('/myclass', verifyJWT, verifyInstructor, async(req, res) => {
-      const body = req.query.status;
-     console.log(body)
+    app.get('/myclass', verifyJWT, async(req, res) => {
       const result = await classesCollection.find().toArray()
       res.send(result)
   })
 
-    app.get("/parsonaldata", verifyJWT, verifyInstructor, async (req, res) => {
+  
+    app.get("/parsonaldata", verifyJWT,  async (req, res) => {
       const email = req.query.email;
-
       if (!email) {
         res.send([]);
       }
@@ -225,7 +231,6 @@ async function run() {
     });
 
 
-
 // ========MY CLASSES UPDATE STATUS=========
 app.put('/myclass/:id', async(req, res) => {
   const id = req.params.id;
@@ -241,7 +246,7 @@ app.put('/myclass/:id', async(req, res) => {
   res.send(result)
 })
 
-app.put('/danied/:id', async(req, res) => {
+app.put('/danied/:id', verifyJWT, async(req, res) => {
   const id = req.params.id;
   const query = {_id: new ObjectId(id)}
   const options = { upsert: true };
@@ -256,7 +261,7 @@ app.put('/danied/:id', async(req, res) => {
 })
 
 // ========MY CLASSES GET ONE STATUS=========
-app.get('/myclass/:id', async(req, res) => {
+app.get('/myclass/:id', verifyJWT, async(req, res) => {
   const id = req.params.id;
   const query = {_id: new ObjectId(id)}
   const result = await classesCollection.findOne(query)
@@ -265,18 +270,17 @@ app.get('/myclass/:id', async(req, res) => {
 
 
 // =======CLASSES POST API=========
-app.post('/classes', async(req, res) => {
+app.post('/classes', verifyJWT, async(req, res) => {
   const classes = req.body;
       const result = await classesCollection.insertOne(classes)
       res.send(result)
 })
 
 // ========CLASSES GET API==========
-app.get('/allclass', async(req, res) => {
+app.get('/allclass', verifyJWT, async(req, res) => {
       const result = await classesCollection.find().toArray()
       res.send(result)
 })
-
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
