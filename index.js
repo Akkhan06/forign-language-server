@@ -122,6 +122,37 @@ async function run() {
       res.send(result);
     });
 
+
+    // =======CHECK ANDMIN EMAIL========
+    app.get("/user/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ admin: false });
+        return
+      }
+
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { admin: user?.role === "admin" };
+      res.send(result);
+    });
+
+    // ======CHECK INSTRUCTOR IMAIL=====
+    app.get("/user/instructor/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ instructor: false });
+        return
+      }
+
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { instructor: user?.role === "instructor" };
+      res.send(result);
+    });
+
     // =====MAKE ADMIN API========
     app.patch('/user/admin/:id', async (req, res) => {
       const id = req.params.id;
