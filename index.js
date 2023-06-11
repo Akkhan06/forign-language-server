@@ -95,7 +95,11 @@ async function run() {
     console.log(result)
   })
 
- 
+  // =====SELECTED ITEMS GET API=====
+  app.get('/selected', verifyJWT, async(req, res) => {
+    const result = await selectedCollection.find().toArray()
+    res.send(result)
+  })
   
 
   // =======VARIFY INSTRUCTOR=========
