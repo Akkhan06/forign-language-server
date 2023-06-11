@@ -88,7 +88,7 @@ async function run() {
   };
 
   // =====SELECTED ITEMS POST API======
-  app.post('/select', verifyJWT, async(req, res) => {
+  app.post('/select', async(req, res) => {
     const selectedItem = req.body;
     const result = await selectedCollection.insertOne(selectedItem)
     res.send(result)
@@ -97,10 +97,25 @@ async function run() {
 
   // =====SELECTED ITEMS GET API=====
   app.get('/selected', verifyJWT, async(req, res) => {
-    const result = await selectedCollection.find().toArray()
-    res.send(result)
+    const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res
+          .status(403)
+          .send({ error: true, message: "porviden access" });
+      }
+
+      const query = { email: email };
+      const result = await selectedCollection.find(query).toArray();
+      console.log("14",result)
+      res.send(result);
   })
-  
+
+
 
   // =======VARIFY INSTRUCTOR=========
   const verifyInstructor = async (req, res, next) => {
@@ -281,7 +296,7 @@ app.post('/classes', verifyJWT, async(req, res) => {
 })
 
 // ========CLASSES GET API==========
-app.get('/allclass', verifyJWT, async(req, res) => {
+app.get('/allclass', async(req, res) => {
       const result = await classesCollection.find().toArray()
       res.send(result)
 })
