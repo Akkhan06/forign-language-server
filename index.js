@@ -119,10 +119,30 @@ async function run() {
 app.get('/selectedonde/:id', async(req, res) => {
   const id = req.params.id;
   const query = {_id: new ObjectId(id)}
-  const result = await selectedCollection.findOne(query).toArray()
+  const result = await selectedCollection.findOne(query)
   res.send(result)
-  console.log(result);
+  console.log("124",result);
 })
+
+
+// =====PAYMENT GETWAY INTENT========
+app.post("/create-payment-intent", async (req, res) => {
+  const { price } = req.body;
+
+  // Create a PaymentIntent with the order amount and currency
+  const amount = price *100
+  console.log(price, amount)
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amount,
+    currency: "usd",
+    payment_method_types: ["card"],
+  });
+
+  res.send({
+    clientSecret: paymentIntent.client_secret,
+  });
+});
+
 
   // =======VARIFY INSTRUCTOR=========
   const verifyInstructor = async (req, res, next) => {
