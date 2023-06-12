@@ -113,9 +113,16 @@ async function run() {
       const result = await selectedCollection.find(query).toArray();
       console.log("14",result)
       res.send(result);
-  })
+})
 
-
+// ====SELECTED SINGLE DATA API=========
+app.get('/selectedonde/:id', async(req, res) => {
+  const id = req.params.id;
+  const query = {_id: new ObjectId(id)}
+  const result = await selectedCollection.findOne(query).toArray()
+  res.send(result)
+  console.log(result);
+})
 
   // =======VARIFY INSTRUCTOR=========
   const verifyInstructor = async (req, res, next) => {
@@ -278,6 +285,21 @@ app.put('/danied/:id', verifyJWT, async(req, res) => {
   console.log(result)
   res.send(result)
 })
+
+// app.put('/selected/:id', verifyJWT, async(req, res) => {
+//   const id = req.params.id;
+//   const query = {_id: new ObjectId(id)}
+//   const options = { upsert: true };
+//   const updateDoc = {
+//     $set: {
+//       status: "selected"
+//     },
+//   };
+//   const result = await classesCollection.updateOne(query, updateDoc, options);
+//   console.log(result)
+//   res.send(result)
+// })
+
 
 // ========MY CLASSES GET ONE STATUS=========
 app.get('/myclass/:id', verifyJWT, async(req, res) => {
