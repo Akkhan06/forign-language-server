@@ -64,6 +64,7 @@ async function run() {
     const usersCollection = client.db("foreignDB").collection("user");
     const classesCollection = client.db("foreignDB").collection("classes");
     const selectedCollection = client.db("foreignDB").collection("selected");
+    // const paymentCollection = client.db('foreignDB').collection('payment')
 
     //===========JWT API=========
     app.post("/jwt", (req, res) => {
@@ -101,7 +102,7 @@ async function run() {
       if (!email) {
         res.send([]);
       }
-
+console.log("105",email)
       const decodedEmail = req.decoded.email;
       if (email !== decodedEmail) {
         return res
@@ -114,6 +115,8 @@ async function run() {
       console.log("14",result)
       res.send(result);
 })
+
+
 
 // ====SELECTED SINGLE DATA API=========
 app.get('/selectedonde/:id', async(req, res) => {
@@ -142,6 +145,24 @@ app.post("/create-payment-intent", async (req, res) => {
     clientSecret: paymentIntent.client_secret,
   });
 });
+
+
+// ====PAYMENT API DATA=======
+app.patch("/payment/:id", verifyJWT, async (req, res) => {
+const id = req.params._id;
+const query = {_id: new ObjectId(id)}
+const options = {upsert: true}
+const updateDoc = {
+  $set: {
+    payment: 'complete'
+  },
+};
+const result = await selectedCollection.updateOne(query, updateDoc, options);
+res.send(result);
+console.log(result)
+});
+
+// =====PAYMENT GET API======
 
 
   // =======VARIFY INSTRUCTOR=========
