@@ -149,7 +149,7 @@ app.post("/create-payment-intent", async (req, res) => {
 
 // ====PAYMENT API DATA=======
 app.patch("/payment/:id", verifyJWT, async (req, res) => {
-const id = req.params._id;
+const id = req.params.id;
 const query = {_id: new ObjectId(id)}
 const options = {upsert: true}
 const updateDoc = {
@@ -158,8 +158,9 @@ const updateDoc = {
   },
 };
 const result = await selectedCollection.updateOne(query, updateDoc, options);
-res.send(result);
 console.log(result)
+res.send(result);
+
 });
 
 // =====PAYMENT GET API======
